@@ -96,6 +96,8 @@
   .botao-link { display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
                 background: #107C10; border-color: #107C10; color: #fff; font-weight: 700; }
   .botao-link img { width: 26px; height: 26px; border-radius: 7px; }
+  .linha .botao-link { flex: 1; }
+  .botao-link.ps { background: #00439C; border-color: #00439C; }
 
   /* abas embaixo, com indicador que desliza */
   nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(11,13,18,.94); border-top: 1px solid var(--borda);
@@ -170,12 +172,18 @@
       <p class="sub">Funciona em campos de texto comuns (navegador, Play Store, Globoplay, Prime, Disney+, SmartTube,
         senha de Wi-Fi). Netflix e YouTube usam teclado próprio: use a busca por voz do controle.</p>
 
-      <h2>Xbox</h2>
-      <a class="botao-link" id="tecladoXbox"
-         href="intent://#Intent;package=com.microsoft.xboxone.smartglass;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.microsoft.xboxone.smartglass;end">
-        <img src="apps/xbox.webp" alt="">Teclado do Xbox</a>
-      <p class="sub">Abre o app Xbox do celular (ou a Play Store para instalar). Conectado ao console, ele mostra o
-        teclado do celular sempre que o Xbox pede texto. A TV não consegue digitar no Xbox: o sinal dele chega só como imagem.</p>
+      <h2>Consoles</h2>
+      <div class="linha">
+        <a class="botao-link" id="tecladoXbox"
+           href="intent://#Intent;package=com.microsoft.xboxone.smartglass;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.microsoft.xboxone.smartglass;end">
+          <img src="apps/xbox.webp" alt="">Teclado Xbox</a>
+        <a class="botao-link ps" id="tecladoPs5"
+           href="intent://#Intent;package=com.scee.psxandroid;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.scee.psxandroid;end">
+          <img src="apps/ps5.webp" alt="">Teclado PS5</a>
+      </div>
+      <p class="sub">Abrem o app Xbox ou o PlayStation App do celular (ou a Play Store para instalar). Conectados ao
+        console, eles mostram o teclado do celular quando o console pede texto. A TV não consegue digitar nos consoles:
+        o sinal deles chega só como imagem.</p>
     </section>
 
     <!-- APPS -->
@@ -191,9 +199,9 @@
         <button class="app" data-acao="abrir" data-alvo="max"><img src="apps/max.webp" alt="">Max</button>
         <button class="app" data-acao="abrir" data-alvo="jw"><img src="apps/jw.webp" alt="">JW.org</button>
         <button class="app" data-acao="abrir" data-alvo="xbox"><img src="apps/xbox.webp" alt="">Xbox</button>
+        <button class="app" data-acao="abrir" data-alvo="ps5"><img src="apps/ps5.webp" alt="">PS5</button>
         <button class="app" data-acao="abrir" data-alvo="smarttube"><img src="apps/smarttube.webp" alt="">SmartTube</button>
         <button class="app" data-acao="abrir" data-alvo="youtubemusic"><img src="apps/youtubemusic.webp" alt="">YT Music</button>
-        <button class="app" data-acao="inicio"><span class="falso"><i data-icone="inicio"></i></span>Início</button>
       </div>
     </section>
 
