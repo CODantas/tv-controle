@@ -1,0 +1,164 @@
+<!doctype html>
+<!--
+  Controle da TV pelo celular (TV Premium). Esta página é pública e não tem segredo nenhum: o endereço secreto
+  da TV chega pelo QR code, depois do "#" (que o navegador não manda para o servidor), e fica guardado só no
+  celular. Os comandos vão para a TV pelo ntfy.sh.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0D12">
+<meta name="referrer" content="no-referrer">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone-192.png">
+<link rel="apple-touch-icon" href="icone-192.png">
+<title>Controle da TV</title>
+<style>
+  :root { --fundo: #0B0D12; --cartao: #161A22; --borda: #2A303B; --ouro: #D9B26A; --texto: #FFFFFF; --texto2: #9AA0AB; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; padding: 20px 16px 96px; background: var(--fundo); color: var(--texto);
+         font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 560px; margin-inline: auto; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  h1 { margin: 4px 0 2px; font-size: 22px; letter-spacing: .5px; }
+  .sub { color: var(--texto2); font-size: 13px; }
+  h2 { color: var(--ouro); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; margin: 22px 0 10px; }
+  .grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  button { appearance: none; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto);
+           border-radius: 14px; padding: 16px 6px; font: 600 15px system-ui, sans-serif; cursor: pointer; }
+  button:active { transform: scale(.97); background: #20252F; }
+  button.ouro { background: var(--ouro); color: #0B0D12; border-color: var(--ouro); }
+  button.discreto { background: none; border: none; color: var(--texto2); font-weight: 500; font-size: 13px; padding: 8px; }
+  .icone { display: block; font-size: 22px; margin-bottom: 4px; }
+  textarea { width: 100%; min-height: 84px; resize: vertical; border-radius: 14px; border: 1px solid var(--borda);
+             background: var(--cartao); color: var(--texto); padding: 12px; font: 16px system-ui, sans-serif; }
+  .linha { display: flex; gap: 10px; margin-top: 10px; }
+  .linha button { flex: 1; }
+  .vazio { text-align: center; padding: 56px 12px; color: var(--texto2); }
+  .vazio .grande { font-size: 56px; }
+  .vazio b { color: var(--texto); }
+  #estado { position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 12px 14px; border-radius: 12px;
+            background: #20252F; border: 1px solid var(--borda); text-align: center; opacity: 0;
+            transition: opacity .2s; max-width: 528px; margin-inline: auto; }
+  #estado.ver { opacity: 1; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Controle da TV</h1>
+      <div class="sub" id="nomeTv">Funciona de qualquer lugar, com a TV ligada.</div>
+    </div>
+    <button class="discreto" id="esquecer" hidden>Desconectar</button>
+  </header>
+
+  <section id="semTv" class="vazio" hidden>
+    <div class="grande">📺</div>
+    <p><b>Este celular ainda não está ligado a uma TV.</b></p>
+    <p>Na TV, abra <b>Celular</b> no menu e leia o QR code com a câmera.</p>
+  </section>
+
+  <main id="controle" hidden>
+    <h2>Abrir</h2>
+    <div class="grade">
+      <button data-acao="abrir" data-alvo="netflix"><span class="icone">🎬</span>Netflix</button>
+      <button data-acao="abrir" data-alvo="youtube"><span class="icone">▶️</span>YouTube</button>
+      <button data-acao="abrir" data-alvo="spotify"><span class="icone">🎵</span>Spotify</button>
+      <button data-acao="abrir" data-alvo="globoplay"><span class="icone">📺</span>Globoplay</button>
+      <button data-acao="abrir" data-alvo="disney"><span class="icone">🏰</span>Disney+</button>
+      <button data-acao="abrir" data-alvo="xbox"><span class="icone">🎮</span>Xbox</button>
+    </div>
+
+    <h2>Controle</h2>
+    <div class="grade">
+      <button data-acao="anterior"><span class="icone">⏮</span>Anterior</button>
+      <button data-acao="pausar"><span class="icone">⏸</span>Pausar</button>
+      <button data-acao="proxima"><span class="icone">⏭</span>Próxima</button>
+      <button data-acao="volume_menos"><span class="icone">🔉</span>Volume −</button>
+      <button data-acao="tocar"><span class="icone">⏯</span>Continuar</button>
+      <button data-acao="volume_mais"><span class="icone">🔊</span>Volume +</button>
+      <button data-acao="mudo"><span class="icone">🔇</span>Mudo</button>
+      <button data-acao="inicio"><span class="icone">🏠</span>Início</button>
+      <button data-acao="desligar"><span class="icone">⏻</span>Desligar</button>
+    </div>
+
+    <h2>Recado na tela</h2>
+    <textarea id="recado" maxlength="140" placeholder="Ex.: Jantar pronto! 🍝"></textarea>
+    <div class="linha">
+      <button data-rapido="Jantar pronto! 🍝">🍝 Jantar</button>
+      <button data-rapido="Hora de dormir 😴">😴 Dormir</button>
+      <button data-rapido="Atende o telefone 📞">📞 Telefone</button>
+    </div>
+    <div class="linha"><button class="ouro" id="enviar">Mostrar na TV</button></div>
+  </main>
+
+  <div id="estado"></div>
+
+<script>
+  'use strict';
+  const CHAVE = 'tvControle.topico';
+  const VALIDO = /^[A-Za-z0-9_-]{16,64}$/;
+
+  // O QR traz "#t=<tópico>". Guarda no celular e tira do endereço (não fica no histórico nem em print).
+  (function lerQr() {
+    const p = new URLSearchParams(location.hash.slice(1));
+    const t = p.get('t');
+    if (t && VALIDO.test(t)) {
+      try { localStorage.setItem(CHAVE, t); } catch (e) { /* modo anônimo: vale só nesta aba */ window._topico = t; }
+      history.replaceState(null, '', location.pathname);
+    }
+  })();
+
+  function topico() {
+    try { return localStorage.getItem(CHAVE) || window._topico || ''; } catch (e) { return window._topico || ''; }
+  }
+
+  function mostrarTela() {
+    const ligado = VALIDO.test(topico());
+    document.getElementById('controle').hidden = !ligado;
+    document.getElementById('esquecer').hidden = !ligado;
+    document.getElementById('semTv').hidden = ligado;
+  }
+
+  const estado = document.getElementById('estado');
+  let timer;
+  function avisar(texto) {
+    estado.textContent = texto;
+    estado.classList.add('ver');
+    clearTimeout(timer);
+    timer = setTimeout(() => estado.classList.remove('ver'), 2200);
+  }
+
+  async function enviar(acao, alvo) {
+    const t = topico();
+    if (!VALIDO.test(t)) { mostrarTela(); return; }
+    try {
+      const r = await fetch('https://ntfy.sh/' + t, { method: 'POST', body: JSON.stringify({ acao: acao, alvo: alvo || '' }) });
+      avisar(r.ok ? 'Enviado para a TV ✓' : 'A TV não recebeu (erro ' + r.status + ')');
+    } catch (e) {
+      avisar('Sem internet no celular?');
+    }
+  }
+
+  document.querySelectorAll('[data-acao]').forEach(b =>
+    b.addEventListener('click', () => enviar(b.dataset.acao, b.dataset.alvo)));
+  document.querySelectorAll('[data-rapido]').forEach(b =>
+    b.addEventListener('click', () => { document.getElementById('recado').value = b.dataset.rapido; }));
+  document.getElementById('enviar').addEventListener('click', () => {
+    const t = document.getElementById('recado').value.trim();
+    if (!t) { avisar('Escreva o recado primeiro'); return; }
+    enviar('aviso', t);
+  });
+  document.getElementById('esquecer').addEventListener('click', () => {
+    if (!confirm('Desconectar este celular da TV?')) return;
+    try { localStorage.removeItem(CHAVE); } catch (e) {}
+    window._topico = '';
+    mostrarTela();
+  });
+
+  mostrarTela();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
