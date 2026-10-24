@@ -69,6 +69,10 @@
   nav button { border: none; background: none; color: var(--texto2); padding: 8px 2px; font-size: 12px; font-weight: 600; }
   nav button .icone { font-size: 20px; margin-bottom: 2px; }
   nav button.ativa { color: var(--ouro); }
+  .ao-vivo { display: flex; align-items: center; gap: 8px; color: var(--texto2); font-size: 14px; margin-top: 10px; }
+  .ao-vivo input { width: 20px; height: 20px; accent-color: var(--ouro); }
+  .botao-link { display: block; text-align: center; text-decoration: none; background: #107C10; color: #fff;
+                border-radius: 14px; padding: 16px 6px; font: 700 15px system-ui, sans-serif; }
 </style>
 </head>
 <body>
@@ -117,10 +121,21 @@
 
       <h2>Digitar na TV</h2>
       <input type="text" id="digitar" maxlength="200" placeholder="Abra a busca na TV e escreva aqui" enterkeyhint="search" autocomplete="off">
+      <label class="ao-vivo"><input type="checkbox" id="aoVivo"> Ao vivo: aparece na TV enquanto digita</label>
       <div class="linha">
         <button id="escrever">✏️ Escrever</button>
+        <button id="limpar">⌫ Apagar</button>
         <button class="ouro" id="buscar">🔎 Buscar</button>
       </div>
+      <p class="sub">Funciona em campos de texto comuns (navegador, Play Store, Globoplay, Prime, Disney+, SmartTube,
+        senha de Wi-Fi). Netflix e YouTube usam teclado próprio: use a busca por voz do controle.</p>
+
+      <h2>Xbox</h2>
+      <a class="botao-link" id="tecladoXbox"
+         href="intent://#Intent;package=com.microsoft.xboxone.smartglass;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.microsoft.xboxone.smartglass;end">
+        🎮 Teclado do Xbox</a>
+      <p class="sub">Abre o app Xbox do celular (ou a Play Store para instalar). Conectado ao console, ele mostra o
+        teclado do celular sempre que o Xbox pede texto. A TV não consegue digitar no Xbox: o sinal dele chega só como imagem.</p>
     </section>
 
     <!-- APPS -->
@@ -286,6 +301,21 @@
   document.getElementById('escrever').addEventListener('click', () => digitar('texto'));
   document.getElementById('buscar').addEventListener('click', () => digitar('buscar'));
   campo.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); digitar('buscar'); } });
+  document.getElementById('limpar').addEventListener('click', () => {
+    campo.value = '';
+    enviar('texto', '', true);
+    campo.focus();
+  });
+  // ao vivo: manda o texto inteiro 350 ms depois da última letra (cada envio substitui o anterior na TV)
+  const aoVivo = document.getElementById('aoVivo');
+  aoVivo.checked = ler('tvControle.aoVivo') === '1';
+  aoVivo.addEventListener('change', () => guardar('tvControle.aoVivo', aoVivo.checked ? '1' : '0'));
+  let esperaVivo;
+  campo.addEventListener('input', () => {
+    if (!aoVivo.checked) return;
+    clearTimeout(esperaVivo);
+    esperaVivo = setTimeout(() => enviar('texto', campo.value, true), 350);
+  });
 
   document.querySelectorAll('[data-rapido]').forEach(b =>
     b.addEventListener('click', () => { document.getElementById('recado').value = b.dataset.rapido; }));
