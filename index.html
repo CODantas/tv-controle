@@ -42,6 +42,13 @@
             transition: opacity .2s; max-width: 528px; margin-inline: auto; }
   #estado.ver { opacity: 1; }
   [hidden] { display: none !important; }
+  .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 72px); gap: 8px;
+          max-width: 300px; margin: 0 auto; }
+  .dpad button { font-size: 26px; padding: 0; border-radius: 18px; }
+  .dpad .ok { border-radius: 50%; background: var(--ouro); color: #0B0D12; border-color: var(--ouro); font-size: 18px; }
+  .dpad .vazio { visibility: hidden; }
+  .nav-extra { display: flex; gap: 10px; max-width: 300px; margin: 10px auto 0; }
+  .nav-extra button { flex: 1; }
 </style>
 </head>
 <body>
@@ -60,6 +67,23 @@
   </section>
 
   <main id="controle" hidden>
+    <h2>Navegar</h2>
+    <div class="dpad">
+      <button class="vazio" tabindex="-1"></button>
+      <button data-acao="tecla" data-alvo="cima" aria-label="Cima">▲</button>
+      <button class="vazio" tabindex="-1"></button>
+      <button data-acao="tecla" data-alvo="esquerda" aria-label="Esquerda">◀</button>
+      <button data-acao="tecla" data-alvo="ok" class="ok" aria-label="OK">OK</button>
+      <button data-acao="tecla" data-alvo="direita" aria-label="Direita">▶</button>
+      <button class="vazio" tabindex="-1"></button>
+      <button data-acao="tecla" data-alvo="baixo" aria-label="Baixo">▼</button>
+      <button class="vazio" tabindex="-1"></button>
+    </div>
+    <div class="nav-extra">
+      <button data-acao="tecla" data-alvo="voltar">↩ Voltar</button>
+      <button data-acao="tecla" data-alvo="home">🏠 Início</button>
+    </div>
+
     <h2>Abrir</h2>
     <div class="grade">
       <button data-acao="abrir" data-alvo="netflix"><span class="icone">🎬</span>Netflix</button>
@@ -131,11 +155,13 @@
   }
 
   async function enviar(acao, alvo) {
+    if (navigator.vibrate) navigator.vibrate(12);
     const t = topico();
     if (!VALIDO.test(t)) { mostrarTela(); return; }
     try {
       const r = await fetch('https://ntfy.sh/' + t, { method: 'POST', body: JSON.stringify({ acao: acao, alvo: alvo || '' }) });
-      avisar(r.ok ? 'Enviado para a TV ✓' : 'A TV não recebeu (erro ' + r.status + ')');
+      if (!r.ok) avisar('A TV não recebeu (erro ' + r.status + ')');
+      else if (acao !== 'tecla') avisar('Enviado para a TV ✓');
     } catch (e) {
       avisar('Sem internet no celular?');
     }
