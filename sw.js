@@ -1,6 +1,8 @@
 // Guarda a página para abrir rápido e sem rede; os comandos sempre vão pela internet.
-const CACHE = 'tv-controle-v7';
-const ARQUIVOS = ['./', 'index.html', 'manifest.webmanifest', 'icone-192.png', 'icone-512.png'];
+const CACHE = 'tv-controle-v8';
+const APPS = ['netflix', 'youtube', 'spotify', 'globoplay', 'disney', 'prime', 'max', 'jw', 'xbox', 'smarttube', 'youtubemusic'];
+const ARQUIVOS = ['./', 'index.html', 'manifest.webmanifest', 'icone-192.png', 'icone-512.png']
+  .concat(APPS.map(a => 'apps/' + a + '.webp'));
 
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARQUIVOS))));
 self.addEventListener('activate', e => e.waitUntil(
