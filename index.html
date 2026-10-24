@@ -15,47 +15,67 @@
 <link rel="apple-touch-icon" href="icone-192.png">
 <title>Controle da TV</title>
 <style>
-  :root { --fundo: #0B0D12; --cartao: #161A22; --borda: #2A303B; --ouro: #D9B26A; --texto: #FFFFFF; --texto2: #9AA0AB; }
+  :root { --fundo: #0B0D12; --cartao: #161A22; --cartao2: #1D222C; --borda: #2A303B; --ouro: #D9B26A;
+          --texto: #FFFFFF; --texto2: #9AA0AB; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { margin: 0; padding: 20px 16px 96px; background: var(--fundo); color: var(--texto);
-         font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 560px; margin-inline: auto; }
+  html, body { background: var(--fundo); }
+  body { margin: 0 auto; padding: 18px 16px calc(96px + env(safe-area-inset-bottom)); color: var(--texto);
+         font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 560px;
+         -webkit-user-select: none; user-select: none; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  h1 { margin: 4px 0 2px; font-size: 22px; letter-spacing: .5px; }
+  h1 { margin: 2px 0; font-size: 22px; letter-spacing: .5px; }
   .sub { color: var(--texto2); font-size: 13px; }
   h2 { color: var(--ouro); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; margin: 22px 0 10px; }
   .grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   button { appearance: none; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto);
-           border-radius: 14px; padding: 16px 6px; font: 600 15px system-ui, sans-serif; cursor: pointer; }
-  button:active { transform: scale(.97); background: #20252F; }
+           border-radius: 14px; padding: 16px 6px; font: 600 15px system-ui, sans-serif; cursor: pointer;
+           touch-action: manipulation; }
+  button:active, button.apertado { transform: scale(.96); background: #232935; }
   button.ouro { background: var(--ouro); color: #0B0D12; border-color: var(--ouro); }
   button.discreto { background: none; border: none; color: var(--texto2); font-weight: 500; font-size: 13px; padding: 8px; }
   .icone { display: block; font-size: 22px; margin-bottom: 4px; }
-  textarea { width: 100%; min-height: 84px; resize: vertical; border-radius: 14px; border: 1px solid var(--borda);
-             background: var(--cartao); color: var(--texto); padding: 12px; font: 16px system-ui, sans-serif; }
+  textarea, input[type=text] { width: 100%; border-radius: 14px; border: 1px solid var(--borda); background: var(--cartao);
+           color: var(--texto); padding: 12px; font: 16px system-ui, sans-serif; -webkit-user-select: text; user-select: text; }
+  textarea { min-height: 84px; resize: vertical; }
   .linha { display: flex; gap: 10px; margin-top: 10px; }
   .linha button { flex: 1; }
   .vazio { text-align: center; padding: 56px 12px; color: var(--texto2); }
   .vazio .grande { font-size: 56px; }
   .vazio b { color: var(--texto); }
-  #estado { position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 12px 14px; border-radius: 12px;
-            background: #20252F; border: 1px solid var(--borda); text-align: center; opacity: 0;
-            transition: opacity .2s; max-width: 528px; margin-inline: auto; }
+  #estado { position: fixed; left: 16px; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); padding: 12px 14px;
+            border-radius: 12px; background: #20252F; border: 1px solid var(--borda); text-align: center; opacity: 0;
+            transition: opacity .2s; max-width: 528px; margin-inline: auto; pointer-events: none; }
   #estado.ver { opacity: 1; }
   [hidden] { display: none !important; }
-  .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 72px); gap: 8px;
-          max-width: 300px; margin: 0 auto; }
+
+  /* direcional com o volume ao lado */
+  .controle { display: grid; grid-template-columns: 1fr 64px; gap: 12px; align-items: center; }
+  .dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 70px); gap: 8px; }
   .dpad button { font-size: 26px; padding: 0; border-radius: 18px; }
   .dpad .ok { border-radius: 50%; background: var(--ouro); color: #0B0D12; border-color: var(--ouro); font-size: 18px; }
-  .dpad .vazio { visibility: hidden; }
-  .nav-extra { display: flex; gap: 10px; max-width: 300px; margin: 10px auto 0; }
-  .nav-extra button { flex: 1; }
+  .volume { display: grid; grid-template-rows: 70px 70px 70px; gap: 8px; }
+  .volume button { padding: 0; font-size: 22px; border-radius: 18px; }
+  .midia { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+  .midia button { padding: 14px 0; font-size: 20px; }
+
+  /* apps com a cor da marca */
+  .app { color: #fff; border: none; font-weight: 700; min-height: 72px; }
+  .app small { display: block; font-weight: 500; font-size: 11px; opacity: .8; margin-top: 2px; }
+
+  /* abas embaixo */
+  nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(11,13,18,.96); border-top: 1px solid var(--borda);
+        padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); backdrop-filter: blur(8px); }
+  nav .abas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-width: 560px; margin: 0 auto; }
+  nav button { border: none; background: none; color: var(--texto2); padding: 8px 2px; font-size: 12px; font-weight: 600; }
+  nav button .icone { font-size: 20px; margin-bottom: 2px; }
+  nav button.ativa { color: var(--ouro); }
 </style>
 </head>
 <body>
   <header>
     <div>
       <h1>Controle da TV</h1>
-      <div class="sub" id="nomeTv">Funciona de qualquer lugar, com a TV ligada.</div>
+      <div class="sub">Funciona de qualquer lugar, com a TV ligada.</div>
     </div>
     <button class="discreto" id="esquecer" hidden>Desconectar</button>
   </header>
@@ -67,105 +87,149 @@
   </section>
 
   <main id="controle" hidden>
-    <h2>Navegar</h2>
-    <div class="dpad">
-      <button class="vazio" tabindex="-1"></button>
-      <button data-acao="tecla" data-alvo="cima" aria-label="Cima">▲</button>
-      <button class="vazio" tabindex="-1"></button>
-      <button data-acao="tecla" data-alvo="esquerda" aria-label="Esquerda">◀</button>
-      <button data-acao="tecla" data-alvo="ok" class="ok" aria-label="OK">OK</button>
-      <button data-acao="tecla" data-alvo="direita" aria-label="Direita">▶</button>
-      <button class="vazio" tabindex="-1"></button>
-      <button data-acao="tecla" data-alvo="baixo" aria-label="Baixo">▼</button>
-      <button class="vazio" tabindex="-1"></button>
-    </div>
-    <div class="nav-extra">
-      <button data-acao="tecla" data-alvo="voltar">↩ Voltar</button>
-      <button data-acao="tecla" data-alvo="home">🏠 Início</button>
-    </div>
+    <!-- CONTROLE -->
+    <section data-aba="controle">
+      <h2>Navegar</h2>
+      <div class="controle">
+        <div class="dpad">
+          <button data-acao="tecla" data-alvo="voltar" aria-label="Voltar">↩</button>
+          <button data-acao="tecla" data-alvo="cima" data-repete aria-label="Cima">▲</button>
+          <button data-acao="tecla" data-alvo="home" aria-label="Início">🏠</button>
+          <button data-acao="tecla" data-alvo="esquerda" data-repete aria-label="Esquerda">◀</button>
+          <button data-acao="tecla" data-alvo="ok" class="ok" aria-label="OK">OK</button>
+          <button data-acao="tecla" data-alvo="direita" data-repete aria-label="Direita">▶</button>
+          <button data-acao="pausar" aria-label="Pausar">⏸</button>
+          <button data-acao="tecla" data-alvo="baixo" data-repete aria-label="Baixo">▼</button>
+          <button data-acao="tocar" aria-label="Continuar">⏯</button>
+        </div>
+        <div class="volume">
+          <button data-acao="volume_mais" data-repete aria-label="Aumentar volume">🔊</button>
+          <button data-acao="mudo" aria-label="Mudo">🔇</button>
+          <button data-acao="volume_menos" data-repete aria-label="Diminuir volume">🔉</button>
+        </div>
+      </div>
+      <div class="midia">
+        <button data-acao="anterior" aria-label="Anterior">⏮</button>
+        <button data-acao="proxima" aria-label="Próxima">⏭</button>
+        <button data-acao="abrir" data-alvo="xbox" aria-label="Xbox">🎮</button>
+        <button data-acao="desligar" data-confirmar="Desligar a TV?" aria-label="Desligar">⏻</button>
+      </div>
 
-    <h2>Abrir</h2>
-    <div class="grade">
-      <button data-acao="abrir" data-alvo="netflix"><span class="icone">🎬</span>Netflix</button>
-      <button data-acao="abrir" data-alvo="youtube"><span class="icone">▶️</span>YouTube</button>
-      <button data-acao="abrir" data-alvo="spotify"><span class="icone">🎵</span>Spotify</button>
-      <button data-acao="abrir" data-alvo="globoplay"><span class="icone">📺</span>Globoplay</button>
-      <button data-acao="abrir" data-alvo="disney"><span class="icone">🏰</span>Disney+</button>
-      <button data-acao="abrir" data-alvo="xbox"><span class="icone">🎮</span>Xbox</button>
-      <button data-acao="abrir" data-alvo="jw"><span class="icone">📖</span>JW.org</button>
-      <button data-acao="abrir" data-alvo="prime"><span class="icone">📦</span>Prime Video</button>
-      <button data-acao="abrir" data-alvo="max"><span class="icone">🎞️</span>Max</button>
-    </div>
+      <h2>Digitar na TV</h2>
+      <input type="text" id="digitar" maxlength="200" placeholder="Abra a busca na TV e escreva aqui" enterkeyhint="search" autocomplete="off">
+      <div class="linha">
+        <button id="escrever">✏️ Escrever</button>
+        <button class="ouro" id="buscar">🔎 Buscar</button>
+      </div>
+    </section>
 
-    <h2>Controle</h2>
-    <div class="grade">
-      <button data-acao="anterior"><span class="icone">⏮</span>Anterior</button>
-      <button data-acao="pausar"><span class="icone">⏸</span>Pausar</button>
-      <button data-acao="proxima"><span class="icone">⏭</span>Próxima</button>
-      <button data-acao="volume_menos"><span class="icone">🔉</span>Volume −</button>
-      <button data-acao="tocar"><span class="icone">⏯</span>Continuar</button>
-      <button data-acao="volume_mais"><span class="icone">🔊</span>Volume +</button>
-      <button data-acao="mudo"><span class="icone">🔇</span>Mudo</button>
-      <button data-acao="inicio"><span class="icone">🏠</span>Início</button>
-      <button data-acao="desligar"><span class="icone">⏻</span>Desligar</button>
-    </div>
+    <!-- APPS -->
+    <section data-aba="apps" hidden>
+      <h2>Abrir</h2>
+      <div class="grade">
+        <button class="app" style="background:#E50914" data-acao="abrir" data-alvo="netflix">Netflix</button>
+        <button class="app" style="background:#FF0033" data-acao="abrir" data-alvo="youtube">YouTube</button>
+        <button class="app" style="background:#1DB954;color:#0B0D12" data-acao="abrir" data-alvo="spotify">Spotify</button>
+        <button class="app" style="background:#FB0234" data-acao="abrir" data-alvo="globoplay">Globoplay</button>
+        <button class="app" style="background:#0E2A8C" data-acao="abrir" data-alvo="disney">Disney+</button>
+        <button class="app" style="background:#00A8E1" data-acao="abrir" data-alvo="prime">Prime Video</button>
+        <button class="app" style="background:#2C0E7A" data-acao="abrir" data-alvo="max">Max</button>
+        <button class="app" style="background:#3E5C8A" data-acao="abrir" data-alvo="jw">JW.org<small>vídeos</small></button>
+        <button class="app" style="background:#107C10" data-acao="abrir" data-alvo="xbox">Xbox</button>
+        <button class="app" style="background:#B3261E" data-acao="abrir" data-alvo="smarttube">SmartTube</button>
+        <button class="app" style="background:#212121" data-acao="abrir" data-alvo="youtubemusic">YT Music</button>
+        <button class="app" style="background:var(--cartao2)" data-acao="inicio">🏠<small>Tela inicial</small></button>
+      </div>
+    </section>
 
-    <h2>Modo infantil</h2>
-    <div class="grade">
-      <button data-acao="infantil" data-alvo="on:60">🧸 1 hora</button>
-      <button data-acao="infantil" data-alvo="on:120">🧸 2 horas</button>
-      <button data-acao="infantil" data-alvo="on:0">🧸 Sem limite</button>
-      <button data-acao="infantil" data-alvo="mais:30">+30 min</button>
-      <button data-acao="infantil" data-alvo="mais:60">+1 hora</button>
-      <button data-acao="infantil" data-alvo="off">Desligar</button>
-    </div>
+    <!-- FAMÍLIA -->
+    <section data-aba="familia" hidden>
+      <h2>Modo infantil</h2>
+      <div class="grade">
+        <button data-acao="infantil" data-alvo="on:60">🧸 1 hora</button>
+        <button data-acao="infantil" data-alvo="on:120">🧸 2 horas</button>
+        <button data-acao="infantil" data-alvo="on:0">🧸 Sem limite</button>
+        <button data-acao="infantil" data-alvo="mais:30">+30 min</button>
+        <button data-acao="infantil" data-alvo="mais:60">+1 hora</button>
+        <button data-acao="infantil" data-alvo="off">Desligar</button>
+      </div>
 
-    <h2>Timer de dormir</h2>
-    <div class="grade">
-      <button data-acao="dormir" data-alvo="15">15 min</button>
-      <button data-acao="dormir" data-alvo="30">30 min</button>
-      <button data-acao="dormir" data-alvo="60">1 hora</button>
-      <button data-acao="dormir" data-alvo="90">1h30</button>
-      <button data-acao="dormir" data-alvo="120">2 horas</button>
-      <button data-acao="dormir" data-alvo="0">Cancelar</button>
-    </div>
+      <h2>Timer de dormir</h2>
+      <div class="grade">
+        <button data-acao="dormir" data-alvo="15">15 min</button>
+        <button data-acao="dormir" data-alvo="30">30 min</button>
+        <button data-acao="dormir" data-alvo="60">1 hora</button>
+        <button data-acao="dormir" data-alvo="90">1h30</button>
+        <button data-acao="dormir" data-alvo="120">2 horas</button>
+        <button data-acao="dormir" data-alvo="0">Cancelar</button>
+      </div>
 
-    <h2>Recado na tela</h2>
-    <textarea id="recado" maxlength="140" placeholder="Ex.: Jantar pronto! 🍝"></textarea>
-    <div class="linha">
-      <button data-rapido="Jantar pronto! 🍝">🍝 Jantar</button>
-      <button data-rapido="Hora de dormir 😴">😴 Dormir</button>
-      <button data-rapido="Atende o telefone 📞">📞 Telefone</button>
-    </div>
-    <div class="linha"><button class="ouro" id="enviar">Mostrar na TV</button></div>
+      <h2>Recado na tela</h2>
+      <textarea id="recado" maxlength="140" placeholder="Ex.: Jantar pronto! 🍝"></textarea>
+      <div class="linha">
+        <button data-rapido="Jantar pronto! 🍝">🍝 Jantar</button>
+        <button data-rapido="Hora de dormir 😴">😴 Dormir</button>
+        <button data-rapido="Atende o telefone 📞">📞 Telefone</button>
+      </div>
+      <div class="linha"><button class="ouro" id="enviar">Mostrar na TV</button></div>
+    </section>
+
+    <!-- MAIS -->
+    <section data-aba="mais" hidden>
+      <h2>Sobre este controle</h2>
+      <p class="sub">Os comandos vão para a TV pela internet, por um endereço secreto que só este celular conhece
+        (veio pelo QR code). Se perder o celular, desconecte todos pela TV: menu <b>Configurações</b> →
+        <b>Desconectar celulares</b>.</p>
+      <p class="sub">Para usar como app: no menu do navegador, <b>Adicionar à tela inicial</b>.</p>
+      <div class="linha"><button id="esquecer2">Desconectar este celular</button></div>
+    </section>
   </main>
+
+  <nav id="nav" hidden>
+    <div class="abas">
+      <button data-ir="controle" class="ativa"><span class="icone">🎮</span>Controle</button>
+      <button data-ir="apps"><span class="icone">📺</span>Apps</button>
+      <button data-ir="familia"><span class="icone">👨‍👩‍👧</span>Família</button>
+      <button data-ir="mais"><span class="icone">⋯</span>Mais</button>
+    </div>
+  </nav>
 
   <div id="estado"></div>
 
 <script>
   'use strict';
   const CHAVE = 'tvControle.topico';
+  const ABA = 'tvControle.aba';
   const VALIDO = /^[A-Za-z0-9_-]{16,64}$/;
+
+  function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* modo anônimo */ } }
+  function ler(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 
   // O QR traz "#t=<tópico>". Guarda no celular e tira do endereço (não fica no histórico nem em print).
   (function lerQr() {
     const p = new URLSearchParams(location.hash.slice(1));
     const t = p.get('t');
     if (t && VALIDO.test(t)) {
-      try { localStorage.setItem(CHAVE, t); } catch (e) { /* modo anônimo: vale só nesta aba */ window._topico = t; }
+      try { localStorage.setItem(CHAVE, t); } catch (e) { window._topico = t; }
       history.replaceState(null, '', location.pathname);
     }
   })();
 
-  function topico() {
-    try { return localStorage.getItem(CHAVE) || window._topico || ''; } catch (e) { return window._topico || ''; }
-  }
+  function topico() { return ler(CHAVE) || window._topico || ''; }
 
   function mostrarTela() {
     const ligado = VALIDO.test(topico());
     document.getElementById('controle').hidden = !ligado;
+    document.getElementById('nav').hidden = !ligado;
     document.getElementById('esquecer').hidden = !ligado;
     document.getElementById('semTv').hidden = ligado;
+  }
+
+  function irPara(aba) {
+    document.querySelectorAll('[data-aba]').forEach(s => { s.hidden = s.dataset.aba !== aba; });
+    document.querySelectorAll('[data-ir]').forEach(b => b.classList.toggle('ativa', b.dataset.ir === aba));
+    guardar(ABA, aba);
+    window.scrollTo(0, 0);
   }
 
   const estado = document.getElementById('estado');
@@ -177,21 +241,52 @@
     timer = setTimeout(() => estado.classList.remove('ver'), 2200);
   }
 
-  async function enviar(acao, alvo) {
+  async function enviar(acao, alvo, silencioso) {
     if (navigator.vibrate) navigator.vibrate(12);
     const t = topico();
     if (!VALIDO.test(t)) { mostrarTela(); return; }
     try {
       const r = await fetch('https://ntfy.sh/' + t, { method: 'POST', body: JSON.stringify({ acao: acao, alvo: alvo || '' }) });
       if (!r.ok) avisar('A TV não recebeu (erro ' + r.status + ')');
-      else if (acao !== 'tecla') avisar('Enviado para a TV ✓');
+      else if (!silencioso) avisar('Enviado para a TV ✓');
     } catch (e) {
       avisar('Sem internet no celular?');
     }
   }
 
-  document.querySelectorAll('[data-acao]').forEach(b =>
-    b.addEventListener('click', () => enviar(b.dataset.acao, b.dataset.alvo)));
+  // Botões de ação. Os marcados com data-repete repetem enquanto o dedo fica em cima (setas e volume).
+  document.querySelectorAll('[data-acao]').forEach(b => {
+    const silencioso = b.dataset.acao === 'tecla' || b.dataset.acao.startsWith('volume');
+    if (b.hasAttribute('data-repete')) {
+      let espera, repete;
+      const parar = () => { clearTimeout(espera); clearInterval(repete); b.classList.remove('apertado'); };
+      b.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        b.classList.add('apertado');
+        enviar(b.dataset.acao, b.dataset.alvo, silencioso);
+        espera = setTimeout(() => { repete = setInterval(() => enviar(b.dataset.acao, b.dataset.alvo, true), 220); }, 450);
+      });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, parar));
+      b.addEventListener('contextmenu', e => e.preventDefault());
+      return;
+    }
+    b.addEventListener('click', () => {
+      if (b.dataset.confirmar && !confirm(b.dataset.confirmar)) return;
+      enviar(b.dataset.acao, b.dataset.alvo, silencioso);
+    });
+  });
+
+  const campo = document.getElementById('digitar');
+  function digitar(acao) {
+    const t = campo.value.trim();
+    if (!t) { avisar('Escreva o texto primeiro'); return; }
+    enviar(acao, t);
+    if (acao === 'buscar') campo.blur();
+  }
+  document.getElementById('escrever').addEventListener('click', () => digitar('texto'));
+  document.getElementById('buscar').addEventListener('click', () => digitar('buscar'));
+  campo.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); digitar('buscar'); } });
+
   document.querySelectorAll('[data-rapido]').forEach(b =>
     b.addEventListener('click', () => { document.getElementById('recado').value = b.dataset.rapido; }));
   document.getElementById('enviar').addEventListener('click', () => {
@@ -199,14 +294,20 @@
     if (!t) { avisar('Escreva o recado primeiro'); return; }
     enviar('aviso', t);
   });
-  document.getElementById('esquecer').addEventListener('click', () => {
+
+  function esquecer() {
     if (!confirm('Desconectar este celular da TV?')) return;
     try { localStorage.removeItem(CHAVE); } catch (e) {}
     window._topico = '';
     mostrarTela();
-  });
+  }
+  document.getElementById('esquecer').addEventListener('click', esquecer);
+  document.getElementById('esquecer2').addEventListener('click', esquecer);
+  document.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => irPara(b.dataset.ir)));
 
   mostrarTela();
+  const salva = ler(ABA);
+  irPara(['controle', 'apps', 'familia', 'mais'].includes(salva) ? salva : 'controle');
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
