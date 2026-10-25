@@ -284,6 +284,7 @@
         <button class="app" data-acao="abrir" data-alvo="prime"><img src="apps/prime.webp" alt="">Prime</button>
         <button class="app" data-acao="abrir" data-alvo="max"><img src="apps/max.webp" alt="">Max</button>
         <button class="app" data-acao="abrir" data-alvo="jw"><img src="apps/jw.webp" alt="">JW.org</button>
+        <button class="app" data-acao="abrir" data-alvo="zoom"><img src="apps/zoom.webp" alt="">Reunião</button>
         <button class="app" data-acao="abrir" data-alvo="xbox"><img src="apps/xbox.webp" alt="">Xbox</button>
         <button class="app" data-acao="abrir" data-alvo="ps5"><img src="apps/ps5.webp" alt="">PS5</button>
         <button class="app" data-acao="abrir" data-alvo="smarttube"><img src="apps/smarttube.webp" alt="">SmartTube</button>
@@ -325,6 +326,12 @@
 
     <!-- MAIS -->
     <section data-aba="mais" hidden>
+      <h2>Reunião no Zoom</h2>
+      <p class="sub">Mudou o número ou a senha? Cole aqui o convite como veio no WhatsApp (o link ou o “ID da
+        reunião” e a “Senha”). A TV confirma na tela. Para entrar: botão <b>Reunião</b> em Apps.</p>
+      <textarea id="convite" maxlength="2000" placeholder="Cole o convite da reunião"></textarea>
+      <div class="linha"><button class="ouro" id="salvarReuniao">Salvar na TV</button></div>
+
       <h2>Sobre este controle</h2>
       <p class="sub">Os comandos vão para a TV pela internet, por um endereço secreto que só este celular conhece
         (veio pelo QR code). Se perder o celular, desconecte todos pela TV: menu <b>Configurações</b> →
@@ -547,6 +554,12 @@
     const t = document.getElementById('recado').value.trim();
     if (!t) { avisar('Escreva o recado primeiro'); return; }
     enviar('aviso', t);
+  });
+  document.getElementById('salvarReuniao').addEventListener('click', () => {
+    const t = document.getElementById('convite').value.trim();
+    if (!/zoom\.us\/|ID/i.test(t)) { avisar('Cole o convite com o link ou o ID da reunião'); return; }
+    enviar('reuniao', t);
+    document.getElementById('convite').value = '';
   });
 
   function esquecer() {
