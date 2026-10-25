@@ -141,6 +141,11 @@
   .extras button { padding: 12px 0; }
 
   .status { flex-wrap: wrap; }
+  .offline { display: flex; gap: 8px; width: 100%; padding-left: 20px; }
+  .offline button, .offline .botao-link { flex: 1; padding: 10px 0; border-radius: 10px; font-size: 13px; display: flex;
+           align-items: center; justify-content: center; gap: 6px; }
+  .offline svg.i { width: 18px; height: 18px; margin: 0; }
+  .botao-link.google { background: var(--cartao2); border-color: var(--borda); }
   .mini { display: flex; gap: 6px; width: 100%; padding-left: 20px; }
   .mini button { flex: 1; padding: 8px 0; border-radius: 10px; }
   .mini svg.i { width: 22px; height: 22px; }
@@ -178,6 +183,10 @@
     <div class="status" id="status">
       <span class="ponto" id="statusPonto"></span>
       <div id="statusTexto">Procurando a TV…</div>
+      <div class="offline" id="offline" hidden>
+        <button data-acao="ligar"><i data-icone="desligar"></i>Tentar ligar</button>
+        <a class="botao-link google" href="intent://#Intent;package=com.google.android.apps.chromecast.app;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.google.android.apps.chromecast.app;end">Google Home</a>
+      </div>
       <div class="mini" id="mini" hidden>
         <button data-acao="anterior" aria-label="Anterior"><i data-icone="anterior"></i></button>
         <button data-acao="pausar" aria-label="Pausar"><i data-icone="pausar"></i></button>
@@ -564,7 +573,12 @@
   function mostrarStatus(texto) {
     statusEl.classList.toggle('ligada', !!texto);
     statusEl.classList.toggle('desligada', !texto);
-    if (!texto) { statusTexto.textContent = 'A TV não respondeu: desligada ou sem internet.'; return; }
+    document.getElementById('offline').hidden = !!texto;
+    if (!texto) {
+      statusTexto.textContent = 'A TV não respondeu: desligada ou sem internet. Tente ligar, ou use o Google Home.';
+      document.getElementById('mini').hidden = true;
+      return;
+    }
     // "Na TV está o Spotify. Tocando X, de Y, faltam 2 minutos." → primeira frase em destaque
     const frases = texto.split(/(?<=\.)\s+/);
     statusTexto.innerHTML = '';
