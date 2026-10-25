@@ -98,6 +98,10 @@
   .botao-link img { width: 26px; height: 26px; border-radius: 7px; }
   .linha .botao-link { flex: 1; }
   .botao-link.ps { background: #00439C; border-color: #00439C; }
+  .passos { padding-left: 20px; margin: 6px 0; }
+  .passos li { margin: 4px 0; }
+  code { background: var(--cartao2); border: 1px solid var(--borda); border-radius: 6px; padding: 1px 5px; font-size: 12px;
+         color: var(--texto); -webkit-user-select: all; user-select: all; word-break: break-all; }
 
   /* abas embaixo, com indicador que desliza */
   nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(11,13,18,.94); border-top: 1px solid var(--borda);
@@ -245,6 +249,21 @@
         <b>Desconectar celulares</b>.</p>
       <p class="sub">Para usar como app: no menu do navegador, <b>Adicionar à tela inicial</b>.</p>
       <div class="linha"><button id="esquecer2">Desconectar este celular</button></div>
+
+      <h2>Ligações na TV</h2>
+      <p class="sub">Para aparecer “📞 Ligação no celular · Fulano” na TV quando o telefone tocar, use o app
+        <b>MacroDroid</b> (grátis, Play Store):</p>
+      <ol class="sub passos">
+        <li>Nova macro → Gatilho: <b>Chamada recebida</b> (qualquer contato).</li>
+        <li>Ação: <b>Requisição HTTP</b> → método <b>POST</b>, URL: o endereço copiado abaixo.</li>
+        <li>Corpo da requisição (texto): <code id="corpoLigacao">{"acao":"ligacao","alvo":"{call_name}"}</code></li>
+        <li>Salve. Pronto: com a TV ligada, a ligação aparece por cima de qualquer coisa, até do Xbox.</li>
+      </ol>
+      <div class="linha">
+        <button id="copiarUrl">Copiar endereço da TV</button>
+        <button id="copiarCorpo">Copiar corpo</button>
+      </div>
+      <p class="sub">O endereço é a chave deste controle: não compartilhe. Se vazar, desconecte os celulares pela TV.</p>
     </section>
   </main>
 
@@ -440,6 +459,14 @@
   document.getElementById('esquecer').addEventListener('click', esquecer);
   document.getElementById('esquecer2').addEventListener('click', esquecer);
   document.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => irPara(b.dataset.ir)));
+
+  async function copiar(texto, msg) {
+    try { await navigator.clipboard.writeText(texto); avisar(msg); }
+    catch (e) { prompt('Copie:', texto); }
+  }
+  document.getElementById('copiarUrl').addEventListener('click', () => copiar('https://ntfy.sh/' + topico(), 'Endereço copiado'));
+  document.getElementById('copiarCorpo').addEventListener('click', () =>
+    copiar(document.getElementById('corpoLigacao').textContent, 'Corpo copiado'));
 
   mostrarTela();
   const salva = ler(ABA);

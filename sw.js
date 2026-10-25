@@ -1,5 +1,5 @@
 // Guarda a página para abrir rápido e sem rede; os comandos sempre vão pela internet.
-const CACHE = 'tv-controle-v9';
+const CACHE = 'tv-controle-v10';
 const APPS = ['netflix', 'youtube', 'spotify', 'globoplay', 'disney', 'prime', 'max', 'jw', 'xbox', 'smarttube', 'youtubemusic', 'ps5'];
 const ARQUIVOS = ['./', 'index.html', 'manifest.webmanifest', 'icone-192.png', 'icone-512.png']
   .concat(APPS.map(a => 'apps/' + a + '.webp'));
