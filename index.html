@@ -116,6 +116,30 @@
   nav button.ativa { color: var(--ouro); }
   nav button.ativa svg.i { transform: translateY(-2px) scale(1.08); }
 
+  /* status da TV */
+  .status { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 12px 14px; border-radius: 14px;
+            background: var(--cartao); border: 1px solid var(--borda); font-size: 14px; color: var(--texto2); min-height: 48px; }
+  .status div { flex: 1; line-height: 1.35; }
+  .status b { color: var(--texto); font-weight: 600; }
+  .ponto { width: 10px; height: 10px; border-radius: 50%; background: #6B7280; flex: none; transition: background .3s; }
+  .status.ligada .ponto { background: #4ADE80; box-shadow: 0 0 0 0 rgba(74,222,128,.6); animation: pulsar 2s infinite; }
+  .status.desligada .ponto { background: #F87171; }
+  @keyframes pulsar { 70% { box-shadow: 0 0 0 8px rgba(74,222,128,0); } 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); } }
+
+  /* direcional ou touchpad */
+  .cabeca { display: flex; align-items: center; justify-content: space-between; }
+  .seletor { display: flex; background: var(--cartao); border: 1px solid var(--borda); border-radius: 10px; padding: 2px; margin-top: 12px; }
+  .seletor button { border: none; background: none; padding: 6px 12px; font-size: 12px; color: var(--texto2); border-radius: 8px; }
+  .seletor button.ativo { background: var(--cartao2); color: var(--ouro); }
+  .touchpad { position: relative; height: 260px; border-radius: 20px; border: 1px solid var(--borda); touch-action: none;
+              background: radial-gradient(circle at 50% 40%, #1D222C, #12151B); display: grid; place-items: center; overflow: hidden; }
+  .touchpad span { color: var(--texto2); font-size: 13px; pointer-events: none; }
+  .rastro { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; pointer-events: none;
+            background: radial-gradient(circle, rgba(217,178,106,.45), rgba(217,178,106,0) 70%); opacity: 0; transition: opacity .2s; }
+  .touchpad.tocando .rastro { opacity: 1; }
+  .extras { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+  .extras button { padding: 12px 0; }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
@@ -137,10 +161,32 @@
   </section>
 
   <main id="controle" hidden>
+    <div class="status" id="status">
+      <span class="ponto" id="statusPonto"></span>
+      <div id="statusTexto">Procurando a TV…</div>
+    </div>
     <!-- CONTROLE -->
     <section data-aba="controle">
-      <h2>Navegar</h2>
-      <div class="controle">
+      <div class="cabeca">
+        <h2>Navegar</h2>
+        <div class="seletor" role="tablist">
+          <button data-modo="dpad" class="ativo">Direcional</button>
+          <button data-modo="touch">Touchpad</button>
+        </div>
+      </div>
+      <div class="touchpad" id="touchpad" hidden>
+        <span>Arraste para mover · toque para OK</span>
+        <div class="rastro" id="rastro"></div>
+      </div>
+      <div class="extras" id="extrasTouch" hidden>
+        <button data-acao="tecla" data-alvo="voltar" aria-label="Voltar"><i data-icone="voltar"></i></button>
+        <button data-acao="tecla" data-alvo="home" aria-label="Início"><i data-icone="inicio"></i></button>
+        <button data-acao="pausar" aria-label="Pausar"><i data-icone="pausar"></i></button>
+        <button data-acao="tocar" aria-label="Continuar"><i data-icone="tocar"></i></button>
+        <button data-acao="volume_menos" data-repete aria-label="Diminuir volume"><i data-icone="volMenos"></i></button>
+        <button data-acao="volume_mais" data-repete aria-label="Aumentar volume"><i data-icone="volMais"></i></button>
+      </div>
+      <div class="controle" id="direcional">
         <div class="dpad">
           <button data-acao="tecla" data-alvo="voltar" aria-label="Voltar"><i data-icone="voltar"></i></button>
           <button class="seta" data-acao="tecla" data-alvo="cima" data-repete aria-label="Cima"><i data-icone="cima"></i></button>
@@ -381,14 +427,15 @@
     setTimeout(() => o.remove(), 520);
   });
 
-  async function enviar(acao, alvo, silencioso) {
-    if (navigator.vibrate) navigator.vibrate(12);
+  async function enviar(acao, alvo, silencioso, semVibrar) {
+    if (navigator.vibrate && !semVibrar) navigator.vibrate(12);
     const t = topico();
     if (!VALIDO.test(t)) { mostrarTela(); return; }
     try {
       const r = await fetch('https://ntfy.sh/' + t, { method: 'POST', body: JSON.stringify({ acao: acao, alvo: alvo || '' }) });
       if (!r.ok) avisar('A TV não recebeu (erro ' + r.status + ')');
       else if (!silencioso) avisar('Enviado para a TV ✓');
+      if (acao !== 'estado') { clearTimeout(depoisDoComando); depoisDoComando = setTimeout(pedirEstado, 1800); }
     } catch (e) {
       avisar('Sem internet no celular?');
     }
@@ -468,7 +515,84 @@
   document.getElementById('copiarCorpo').addEventListener('click', () =>
     copiar(document.getElementById('corpoLigacao').textContent, 'Corpo copiado'));
 
+  // ---- status da TV: pergunta a cada 20 s (só com a página aberta) e ouve a resposta no tópico + "-r" ----
+  const statusEl = document.getElementById('status'), statusTexto = document.getElementById('statusTexto');
+  let esperando = null, depoisDoComando, fonte = null;
+  function mostrarStatus(texto) {
+    statusEl.classList.toggle('ligada', !!texto);
+    statusEl.classList.toggle('desligada', !texto);
+    if (!texto) { statusTexto.textContent = 'A TV não respondeu: desligada ou sem internet.'; return; }
+    // "Na TV está o Spotify. Tocando X, de Y, faltam 2 minutos." → primeira frase em destaque
+    const frases = texto.split(/(?<=\.)\s+/);
+    statusTexto.innerHTML = '';
+    const b = document.createElement('b'); b.textContent = frases[0]; statusTexto.appendChild(b);
+    if (frases.length > 1) statusTexto.appendChild(document.createTextNode(' ' + frases.slice(1).join(' ')));
+  }
+  function ouvir() {
+    const t = topico();
+    if (fonte || !VALIDO.test(t) || !window.EventSource) return;
+    fonte = new EventSource('https://ntfy.sh/' + t + '-r/sse');
+    fonte.onmessage = e => {
+      try {
+        const m = JSON.parse(JSON.parse(e.data).message);
+        if (m.nonce && m.nonce === esperando) { esperando = null; mostrarStatus(m.texto); }
+      } catch (x) { /* outra mensagem */ }
+    };
+  }
+  function pedirEstado() {
+    if (document.hidden || !VALIDO.test(topico())) return;
+    ouvir();
+    const n = Math.random().toString(16).slice(2, 12);
+    esperando = n;
+    enviar('estado', n, true, true);
+    setTimeout(() => { if (esperando === n) { esperando = null; mostrarStatus(null); } }, 9000);
+  }
+  setInterval(pedirEstado, 20000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pedirEstado(); });
+
+  // ---- touchpad: cada 50 px arrastados num eixo é uma seta; toque curto é OK ----
+  const pad = document.getElementById('touchpad'), rastro = document.getElementById('rastro');
+  let ini = null;
+  pad.addEventListener('pointerdown', e => {
+    pad.setPointerCapture(e.pointerId);
+    ini = { x: e.clientX, y: e.clientY, ox: e.clientX, oy: e.clientY, t: Date.now(), moveu: false };
+    pad.classList.add('tocando');
+    const r = pad.getBoundingClientRect();
+    rastro.style.left = (e.clientX - r.left) + 'px'; rastro.style.top = (e.clientY - r.top) + 'px';
+  });
+  pad.addEventListener('pointermove', e => {
+    if (!ini) return;
+    const r = pad.getBoundingClientRect();
+    rastro.style.left = (e.clientX - r.left) + 'px'; rastro.style.top = (e.clientY - r.top) + 'px';
+    const dx = e.clientX - ini.x, dy = e.clientY - ini.y, PASSO = 50;
+    if (Math.abs(dx) >= PASSO && Math.abs(dx) > Math.abs(dy)) {
+      enviar('tecla', dx > 0 ? 'direita' : 'esquerda', true); ini.x = e.clientX; ini.y = e.clientY; ini.moveu = true;
+    } else if (Math.abs(dy) >= PASSO) {
+      enviar('tecla', dy > 0 ? 'baixo' : 'cima', true); ini.x = e.clientX; ini.y = e.clientY; ini.moveu = true;
+    }
+  });
+  const soltar = e => {
+    if (!ini) return;
+    const parado = Math.hypot(e.clientX - ini.ox, e.clientY - ini.oy) < 14 && Date.now() - ini.t < 350;
+    if (!ini.moveu && parado) enviar('tecla', 'ok', true);
+    ini = null;
+    pad.classList.remove('tocando');
+  };
+  pad.addEventListener('pointerup', soltar);
+  pad.addEventListener('pointercancel', () => { ini = null; pad.classList.remove('tocando'); });
+
+  function modo(m) {
+    document.querySelectorAll('[data-modo]').forEach(b => b.classList.toggle('ativo', b.dataset.modo === m));
+    document.getElementById('direcional').hidden = m !== 'dpad';
+    document.getElementById('touchpad').hidden = m !== 'touch';
+    document.getElementById('extrasTouch').hidden = m !== 'touch';
+    guardar('tvControle.modo', m);
+  }
+  document.querySelectorAll('[data-modo]').forEach(b => b.addEventListener('click', () => modo(b.dataset.modo)));
+  modo(ler('tvControle.modo') === 'touch' ? 'touch' : 'dpad');
+
   mostrarTela();
+  pedirEstado();
   const salva = ler(ABA);
   irPara(ABAS.includes(salva) ? salva : 'controle');
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
