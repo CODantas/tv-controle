@@ -140,6 +140,20 @@
   .extras { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
   .extras button { padding: 12px 0; }
 
+  .status { flex-wrap: wrap; }
+  .mini { display: flex; gap: 6px; width: 100%; padding-left: 20px; }
+  .mini button { flex: 1; padding: 8px 0; border-radius: 10px; }
+  .mini svg.i { width: 22px; height: 22px; }
+  .volumeBarra { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .volumeBarra button { padding: 8px 10px; border-radius: 10px; }
+  .volumeBarra svg.i { width: 20px; height: 20px; }
+  .volumeBarra input { flex: 1; accent-color: var(--ouro); height: 28px; }
+  .volumeBarra span { width: 42px; text-align: right; color: var(--texto2); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .comMic { display: flex; gap: 8px; }
+  .comMic input { flex: 1; }
+  .comMic button { padding: 0 14px; }
+  .comMic button.ouvindo { background: #B3261E; border-color: #B3261E; animation: pulsar 1.2s infinite; }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
@@ -164,6 +178,16 @@
     <div class="status" id="status">
       <span class="ponto" id="statusPonto"></span>
       <div id="statusTexto">Procurando a TV…</div>
+      <div class="mini" id="mini" hidden>
+        <button data-acao="anterior" aria-label="Anterior"><i data-icone="anterior"></i></button>
+        <button data-acao="pausar" aria-label="Pausar"><i data-icone="pausar"></i></button>
+        <button data-acao="proxima" aria-label="Próxima"><i data-icone="proxima"></i></button>
+      </div>
+    </div>
+    <div class="volumeBarra">
+      <button data-acao="mudo" aria-label="Mudo" id="botaoMudo"><i data-icone="mudo"></i></button>
+      <input type="range" id="volume" min="0" max="100" step="5" value="0" aria-label="Volume da TV">
+      <span id="volumeTexto">–</span>
     </div>
     <!-- CONTROLE -->
     <section data-aba="controle">
@@ -212,7 +236,10 @@
       </div>
 
       <h2>Digitar na TV</h2>
-      <input type="text" id="digitar" maxlength="200" placeholder="Abra a busca na TV e escreva aqui" enterkeyhint="search" autocomplete="off">
+      <div class="comMic">
+        <input type="text" id="digitar" maxlength="200" placeholder="Abra a busca na TV e escreva aqui" enterkeyhint="search" autocomplete="off">
+        <button id="mic" aria-label="Falar" hidden><i data-icone="mic"></i></button>
+      </div>
       <label class="ao-vivo"><input type="checkbox" id="aoVivo"> Ao vivo: aparece na TV enquanto digita</label>
       <div class="linha">
         <button id="escrever"><i data-icone="escrever"></i>Escrever</button>
@@ -354,6 +381,7 @@
     mais: 'M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
     escrever: 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
     apagar: 'M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z',
+    mic: 'M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z',
     buscar: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'
   };
   document.querySelectorAll('i[data-icone]').forEach(i => {
@@ -471,6 +499,21 @@
     if (acao === 'buscar') campo.blur();
   }
   document.getElementById('escrever').addEventListener('click', () => digitar('texto'));
+  const Reconhecer = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (Reconhecer) {
+    const mic = document.getElementById('mic');
+    mic.hidden = false;
+    mic.addEventListener('click', () => {
+      const r = new Reconhecer();
+      r.lang = 'pt-BR';
+      r.interimResults = false;
+      mic.classList.add('ouvindo');
+      r.onresult = e => { campo.value = e.results[0][0].transcript; digitar('buscar'); };
+      r.onerror = () => avisar('Não entendi, tente de novo');
+      r.onend = () => mic.classList.remove('ouvindo');
+      r.start();
+    });
+  }
   document.getElementById('buscar').addEventListener('click', () => digitar('buscar'));
   campo.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); digitar('buscar'); } });
   document.getElementById('limpar').addEventListener('click', () => {
@@ -528,6 +571,21 @@
     const b = document.createElement('b'); b.textContent = frases[0]; statusTexto.appendChild(b);
     if (frases.length > 1) statusTexto.appendChild(document.createTextNode(' ' + frases.slice(1).join(' ')));
   }
+  const vol = document.getElementById('volume'), volTexto = document.getElementById('volumeTexto');
+  let mexendoVolume = false, esperaVolume;
+  function mostrarExtras(m) {
+    document.getElementById('mini').hidden = !m.tocando;
+    if (typeof m.volume === 'number' && !mexendoVolume) {
+      vol.value = m.volume;
+      volTexto.textContent = m.mudo ? 'mudo' : m.volume + '%';
+    }
+  }
+  vol.addEventListener('input', () => {
+    mexendoVolume = true;
+    volTexto.textContent = vol.value + '%';
+    clearTimeout(esperaVolume);
+    esperaVolume = setTimeout(() => { enviar('volume', vol.value, true); mexendoVolume = false; }, 250);
+  });
   function ouvir() {
     const t = topico();
     if (fonte || !VALIDO.test(t) || !window.EventSource) return;
@@ -535,7 +593,7 @@
     fonte.onmessage = e => {
       try {
         const m = JSON.parse(JSON.parse(e.data).message);
-        if (m.nonce && m.nonce === esperando) { esperando = null; mostrarStatus(m.texto); }
+        if (m.nonce && m.nonce === esperando) { esperando = null; mostrarStatus(m.texto); mostrarExtras(m); }
       } catch (x) { /* outra mensagem */ }
     };
   }
@@ -592,6 +650,14 @@
   modo(ler('tvControle.modo') === 'touch' ? 'touch' : 'dpad');
 
   mostrarTela();
+  (function atalhoDoIcone() {
+    const q = new URLSearchParams(location.search);
+    const acao = q.get('acao');
+    if (!acao || !['abrir', 'pausar', 'tocar', 'desligar'].includes(acao)) return;
+    const alvo = q.get('alvo') || '';
+    history.replaceState(null, '', location.pathname);
+    enviar(acao, /^[a-z0-9]{0,20}$/.test(alvo) ? alvo : '');
+  })();
   pedirEstado();
   const salva = ler(ABA);
   irPara(ABAS.includes(salva) ? salva : 'controle');

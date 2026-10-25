@@ -8,7 +8,67 @@
   "theme_color": "#0B0D12",
   "lang": "pt-BR",
   "icons": [
-    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icone-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icone-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Netflix",
+      "short_name": "Netflix",
+      "url": "./?acao=abrir&alvo=netflix",
+      "icons": [
+        {
+          "src": "apps/netflix.webp",
+          "sizes": "128x128",
+          "type": "image/webp"
+        }
+      ]
+    },
+    {
+      "name": "YouTube",
+      "short_name": "YouTube",
+      "url": "./?acao=abrir&alvo=youtube",
+      "icons": [
+        {
+          "src": "apps/youtube.webp",
+          "sizes": "128x128",
+          "type": "image/webp"
+        }
+      ]
+    },
+    {
+      "name": "Pausar",
+      "short_name": "Pausar",
+      "url": "./?acao=pausar",
+      "icons": [
+        {
+          "src": "icone-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Desligar a TV",
+      "short_name": "Desligar",
+      "url": "./?acao=desligar",
+      "icons": [
+        {
+          "src": "icone-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }
